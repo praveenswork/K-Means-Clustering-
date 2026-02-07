@@ -1,0 +1,32 @@
+Optimal K Selection (Elbow Method)
+
+The Elbow Method was applied by plotting inertia values for K ranging from 1 to 8.
+A clear elbow was observed at K = 4, indicating diminishing returns in inertia
+reduction beyond this point. Therefore, K = 4 was selected as the optimal number
+of clusters.
+
+Final Centroids
+
+The final centroids were computed in 5-dimensional space using the custom
+K-Means implementation. Although visualization is limited to 2D projections,
+the algorithm operates fully in higher dimensions.
+
+Challenges Faced During Implementation
+
+1. Efficient distance computation in higher dimensions required careful use of
+   NumPy broadcasting.
+2. Handling empty clusters during centroid updates needed additional checks.
+3. Convergence stability was sensitive to random initialization.
+4. Visualizing high-dimensional clustering required dimensional projection.
+
+Computational Complexity
+
+Each iteration has a time complexity of O(n × k × d).
+Total complexity is O(i × n × k × d), where:
+n = samples, k = clusters, d = dimensions, i = iterations.
+
+Comparison with scikit-learn
+
+The scikit-learn implementation converges faster due to k-means++ initialization
+and optimized low-level routines. The custom implementation prioritizes clarity
+and educational value.
