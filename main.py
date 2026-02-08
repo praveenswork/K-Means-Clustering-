@@ -1,89 +1,97 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.datasets import make_blobs, load_iris
+from sklearn.datasets import load_iris
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 
 from kmeans_from_scratch import KMeansFromScratch
 
 # =====================================
-# TASK 2: SYNTHETIC DATA (INITIAL TEST)
+# LOAD & STANDARDIZE IRIS DATA
 # =====================================
-X_syn, _ = make_blobs(
-    n_samples=400,
-    centers=4,
-    n_features=2,
-    cluster_std=1.0,
-    random_state=42
-)
+iris = load_iris()
+X = iris.data
+y_true = iris.target
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
 # =====================================
-# TASK 3: ELBOW METHOD (WCSS, MANUAL)
+# ELBOW METHOD ON IRIS DATA (WCSS)
 # =====================================
-wcss_values = []
+wcss = []
 K_range = range(1, 8)
 
 for k in K_range:
-    kmeans = KMeansFromScratch(n_clusters=k, random_state=42)
-    kmeans.fit(X_syn)
-    wcss_values.append(kmeans.wcss_)
+    model = KMeansFromScratch(n_clusters=k, random_state=42)
+    model.fit(X_scaled)
+    wcss.append(model.wcss_)
 
 plt.figure(figsize=(7, 5))
-plt.plot(K_range, wcss_values, marker='o')
+plt.plot(K_range, wcss, marker='o')
 plt.xlabel("Number of Clusters (K)")
 plt.ylabel("WCSS")
-plt.title("Elbow Method (WCSS vs K)")
+plt.title("Elbow Method on Iris Dataset")
 plt.show()
 
-# From elbow plot, K = 3 is chosen for Iris
+# Optimal K = 3 based on elbow
+K_OPT = 3
 
 # =====================================
-# TASK 2 & 4: IRIS DATASET
+# CUSTOM K-MEANS (FROM SCRATCH)
 # =====================================
-iris = load_iris()
-X_iris = iris.data
-y_true = iris.target
-feature_names = iris.feature_names
-
-# Standardize features
-X_iris = StandardScaler().fit_transform(X_iris)
-
-# Apply Custom K-Means on Iris
-kmeans_iris = KMeansFromScratch(n_clusters=3, random_state=42)
-kmeans_iris.fit(X_iris)
+custom_kmeans = KMeansFromScratch(n_clusters=K_OPT, random_state=42)
+custom_kmeans.fit(X_scaled)
 
 # =====================================
-# TASK 4: 2D VISUALIZATION
+# SILHOUETTE SCORE (QUANTITATIVE METRIC)
 # =====================================
-# Using Sepal Length (0) vs Sepal Width (1)
+custom_silhouette = silhouette_score(X_scaled, custom_kmeans.labels_)
+print(f"Silhouette Score (Custom K-Means): {custom_silhouette:.4f}")
+
+# =====================================
+# SKLEARN K-MEANS (COMPARISON)
+# =====================================
+sk_kmeans = KMeans(n_clusters=K_OPT, random_state=42, n_init=10)
+sk_labels = sk_kmeans.fit_predict(X_scaled)
+
+sk_silhouette = silhouette_score(X_scaled, sk_labels)
+print(f"Silhouette Score (sklearn KMeans): {sk_silhouette:.4f}")
+
+# =====================================
+# PCA FOR 2D VISUALIZATION (4D → 2D)
+# =====================================
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+centroids_pca = pca.transform(custom_kmeans.centroids)
+
 plt.figure(figsize=(8, 6))
 plt.scatter(
-    X_iris[:, 0],
-    X_iris[:, 1],
-    c=kmeans_iris.labels_,
+    X_pca[:, 0],
+    X_pca[:, 1],
+    c=custom_kmeans.labels_,
     cmap="viridis",
     s=30
 )
 plt.scatter(
-    kmeans_iris.centroids[:, 0],
-    kmeans_iris.centroids[:, 1],
+    centroids_pca[:, 0],
+    centroids_pca[:, 1],
     c="red",
     marker="X",
     s=200,
     label="Centroids"
 )
-plt.xlabel(feature_names[0])
-plt.ylabel(feature_names[1])
-plt.title("Custom K-Means on Iris Dataset (2D Projection)")
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.title("Custom K-Means on Iris (PCA Projection)")
 plt.legend()
 plt.show()
 
 # =====================================
-# TASK 5: TEXTUAL ANALYSIS SUPPORT
+# CLUSTER DISTRIBUTION
 # =====================================
-print("Cluster label distribution:")
-for i in range(3):
-    print(f"Cluster {i}: {np.sum(kmeans_iris.labels_ == i)} samples")
-
-print("\nTrue Iris species distribution:")
-for i, name in enumerate(iris.target_names):
-    print(f"{name}: {np.sum(y_true == i)} samples")
+print("\nCluster distribution (Custom K-Means):")
+for i in range(K_OPT):
+    print(f"Cluster {i}: {np.sum(custom_kmeans.labels_ == i)} samples")
