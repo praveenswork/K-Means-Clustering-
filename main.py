@@ -1,64 +1,89 @@
+import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.datasets import make_blobs
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+from sklearn.datasets import make_blobs, load_iris
+from sklearn.preprocessing import StandardScaler
 
 from kmeans_from_scratch import KMeansFromScratch
 
-# Generate 5D synthetic dataset
-X, _ = make_blobs(
-    n_samples=600,
+# =====================================
+# TASK 2: SYNTHETIC DATA (INITIAL TEST)
+# =====================================
+X_syn, _ = make_blobs(
+    n_samples=400,
     centers=4,
-    n_features=5,   # 🔴 IMPORTANT FIX
-    cluster_std=1.2,
+    n_features=2,
+    cluster_std=1.0,
     random_state=42
 )
 
-# -------------------------------
-# Elbow Method (Task Requirement)
-# -------------------------------
-inertias = []
-K_range = range(1, 9)
+# =====================================
+# TASK 3: ELBOW METHOD (WCSS, MANUAL)
+# =====================================
+wcss_values = []
+K_range = range(1, 8)
 
 for k in K_range:
-    km = KMeans(n_clusters=k, random_state=42, n_init=10)
-    km.fit(X)
-    inertias.append(km.inertia_)
+    kmeans = KMeansFromScratch(n_clusters=k, random_state=42)
+    kmeans.fit(X_syn)
+    wcss_values.append(kmeans.wcss_)
 
 plt.figure(figsize=(7, 5))
-plt.plot(K_range, inertias, marker='o')
+plt.plot(K_range, wcss_values, marker='o')
 plt.xlabel("Number of Clusters (K)")
-plt.ylabel("Inertia")
-plt.title("Elbow Method for Optimal K")
+plt.ylabel("WCSS")
+plt.title("Elbow Method (WCSS vs K)")
 plt.show()
 
-# -------------------------------
-# Custom K-Means (K=4)
-# -------------------------------
-custom_kmeans = KMeansFromScratch(n_clusters=4, random_state=42)
-custom_kmeans.fit(X)
+# From elbow plot, K = 3 is chosen for Iris
 
-# Visualization (only first 2 dimensions)
+# =====================================
+# TASK 2 & 4: IRIS DATASET
+# =====================================
+iris = load_iris()
+X_iris = iris.data
+y_true = iris.target
+feature_names = iris.feature_names
+
+# Standardize features
+X_iris = StandardScaler().fit_transform(X_iris)
+
+# Apply Custom K-Means on Iris
+kmeans_iris = KMeansFromScratch(n_clusters=3, random_state=42)
+kmeans_iris.fit(X_iris)
+
+# =====================================
+# TASK 4: 2D VISUALIZATION
+# =====================================
+# Using Sepal Length (0) vs Sepal Width (1)
 plt.figure(figsize=(8, 6))
 plt.scatter(
-    X[:, 0], X[:, 1],
-    c=custom_kmeans.labels_,
+    X_iris[:, 0],
+    X_iris[:, 1],
+    c=kmeans_iris.labels_,
     cmap="viridis",
     s=30
 )
-plt.title("Custom K-Means Clustering (First 2 Dimensions)")
+plt.scatter(
+    kmeans_iris.centroids[:, 0],
+    kmeans_iris.centroids[:, 1],
+    c="red",
+    marker="X",
+    s=200,
+    label="Centroids"
+)
+plt.xlabel(feature_names[0])
+plt.ylabel(feature_names[1])
+plt.title("Custom K-Means on Iris Dataset (2D Projection)")
+plt.legend()
 plt.show()
 
-# -------------------------------
-# Task 4: Silhouette Score
-# -------------------------------
-custom_score = silhouette_score(X, custom_kmeans.labels_)
+# =====================================
+# TASK 5: TEXTUAL ANALYSIS SUPPORT
+# =====================================
+print("Cluster label distribution:")
+for i in range(3):
+    print(f"Cluster {i}: {np.sum(kmeans_iris.labels_ == i)} samples")
 
-sk_kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
-sk_labels = sk_kmeans.fit_predict(X)
-sk_score = silhouette_score(X, sk_labels)
-
-print("Silhouette Scores")
-print("-----------------")
-print(f"Custom K-Means  : {custom_score:.4f}")
-print(f"Sklearn K-Means : {sk_score:.4f}")
+print("\nTrue Iris species distribution:")
+for i, name in enumerate(iris.target_names):
+    print(f"{name}: {np.sum(y_true == i)} samples")

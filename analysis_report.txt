@@ -1,32 +1,29 @@
-Optimal K Selection (Elbow Method)
+Elbow Method and Optimal K Selection
 
-The Elbow Method was applied by plotting inertia values for K ranging from 1 to 8.
-A clear elbow was observed at K = 4, indicating diminishing returns in inertia
-reduction beyond this point. Therefore, K = 4 was selected as the optimal number
-of clusters.
+The Elbow Method was implemented using the Within-Cluster Sum of Squares (WCSS)
+calculated manually in the custom K-Means implementation. The elbow plot showed
+a clear inflection point at K = 3, which aligns with the known number of Iris
+species. Therefore, K = 3 was selected as the optimal number of clusters.
 
-Final Centroids
+Iris Dataset Clustering Interpretation
 
-The final centroids were computed in 5-dimensional space using the custom
-K-Means implementation. Although visualization is limited to 2D projections,
-the algorithm operates fully in higher dimensions.
+The custom K-Means algorithm was applied to the Iris dataset using all four
+features. A 2D visualization was generated using Sepal Length and Sepal Width
+for interpretability.
 
-Challenges Faced During Implementation
+One cluster strongly corresponds to Iris-setosa, indicating good separation.
+The remaining two clusters show partial overlap between versicolor and
+virginica, which is expected due to feature similarity between these species.
 
-1. Efficient distance computation in higher dimensions required careful use of
-   NumPy broadcasting.
-2. Handling empty clusters during centroid updates needed additional checks.
-3. Convergence stability was sensitive to random initialization.
-4. Visualizing high-dimensional clustering required dimensional projection.
+Comparison with Ground Truth Labels
 
-Computational Complexity
+Since K-Means is unsupervised, cluster labels do not directly match species
+labels. However, qualitative comparison shows meaningful structure alignment,
+especially for Iris-setosa.
 
-Each iteration has a time complexity of O(n × k × d).
-Total complexity is O(i × n × k × d), where:
-n = samples, k = clusters, d = dimensions, i = iterations.
+Challenges Encountered
 
-Comparison with scikit-learn
-
-The scikit-learn implementation converges faster due to k-means++ initialization
-and optimized low-level routines. The custom implementation prioritizes clarity
-and educational value.
+- Handling empty clusters during centroid updates
+- Determining optimal K without supervised labels
+- Visualizing high-dimensional clustering in 2D
+- Sensitivity to random centroid initialization
